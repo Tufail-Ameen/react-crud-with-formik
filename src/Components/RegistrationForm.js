@@ -9,12 +9,18 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from "react-redux";
+import { registerData } from '../Redux/Slice/RegisterFormSlice';
+
 
 export default function Foam() {
     let [formData, setFormData] = useState([]);            //for show data
     let [editingIndex, setEditingIndex] = useState(-1);    //for edit
     let [ButtonUpdate, setButtonUpdate] = useState("");    //for button text update
     let [editid, setEditId] = useState("");                //for update API
+
+
+    const dispatch = useDispatch()
 
     // Get API
     useEffect(() => {
@@ -24,17 +30,17 @@ export default function Foam() {
             });
     }, []);
 
-    const initialValues = {
-        firstName: "",
-        lastName: "",
-        gender: "Male",
-        language: [],
-        email: "",
-        phoneNo: "",
-        city: "",
-        password: "",
-        description: ""
-    }
+    // const initialValues = {
+    //     firstName: "",
+    //     lastName: "",
+    //     gender: "Male",
+    //     language: [],
+    //     email: "",
+    //     phoneNo: "",
+    //     city: "",
+    //     password: "",
+    //     description: ""
+    // }
 
     const validationSchema = Yup.object({
         firstName: Yup.string()
@@ -67,46 +73,48 @@ export default function Foam() {
     });
 
     const onSubmit = (values, { resetForm }) => {
-        navigate("/")
+        console.log("onsubmit", values);
+        dispatch(registerData(values));
 
-        const emailExists = formData.some(data => data.email === values.email);
+        // navigate("/")
+        // const emailExists = formData.some(data => data.email === values.email);
 
-        let mydata = {
-            firstName: values.firstName,
-            lastName: values.lastName,
-            gender: values.gender,
-            language: values.language,
-            email: values.email,
-            phoneNo: values.phoneNo,
-            city: values.city,
-            password: values.password,
-            description: values.description
-        };
-        if (editingIndex !== -1) {
-            // Patch API
-            axios.patch(`http://localhost:3000/users/${editid}`, mydata)
-                .then(response => {
-                    // console.log("Data Update Successfully")
-                })
+        // let mydata = {
+        //     firstName: values.firstName,
+        //     lastName: values.lastName,
+        //     gender: values.gender,
+        //     language: values.language,
+        //     email: values.email,
+        //     phoneNo: values.phoneNo,
+        //     city: values.city,
+        //     password: values.password,
+        //     description: values.description
+        // };
+        // if (editingIndex !== -1) {
+        //     // Patch API
+        //     axios.patch(`http://localhost:3000/users/${editid}`, mydata)
+        //         .then(response => {
+        //             // console.log("Data Update Successfully")
+        //         })
 
-        }
-        else if (!emailExists) {
-            // POST API
-            axios.post("http://localhost:3000/users", mydata)
-                .then(response => {
-                    toast.success("Register Successfully!");
-                    resetForm();
-                })
+        // }
+        // else if (!emailExists) {
+        //     // POST API
+        //     axios.post("http://localhost:3000/users", mydata)
+        //         .then(response => {
+        //             toast.success("Register Successfully!");
+        //             resetForm();
+        //         })
 
-        } else {
-            toast.warning("Email already exists, enter a different email.");
-        }
-        setTimeout(() => {
-            axios.get("http://localhost:3000/users")
-                .then((response) => {
-                    setFormData(response.data);
-                });
-        }, 1000);
+        // } else {
+        //     toast.warning("Email already exists, enter a different email.");
+        // }
+        // setTimeout(() => {
+        //     axios.get("http://localhost:3000/users")
+        //         .then((response) => {
+        //             setFormData(response.data);
+        //         });
+        // }, 1000);
     };
 
     const handeldeletebtn = (id) => {
@@ -146,7 +154,7 @@ export default function Foam() {
     return (
         <>
             <Formik
-                initialValues={editingIndex === -1 ? initialValues : formData[editingIndex]}
+                // initialValues={editingIndex === -1 ? initialValues : formData[editingIndex]}
                 validationSchema={validationSchema}
                 onSubmit={onSubmit}
                 enableReinitialize

@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialValues = {
+export const initialState = {
     firstName: "",
     lastName: "",
     gender: "Male",
@@ -10,14 +10,14 @@ const initialValues = {
     city: "",
     password: "",
     description: ""
-}
+};
 
 const RegisterFormSlice = createSlice({
     name: "register",
-    initialValues,
+    initialState,
     reducers: {
-        registerData: (state) => {
-            console.log(state.initialValues);
+        registerData: (state, action) => {
+            console.log("action.payload", action.payload);
         },
     },
 });

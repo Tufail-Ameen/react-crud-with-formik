@@ -16,4 +16,8 @@ export const deleteUser = (id) => {
     return api.delete(`/${id}`);
 }
 
+export const updateUser = (id, userData) => {
+    return api.put(`/${id}`, userData);
+}
+
 export default api;

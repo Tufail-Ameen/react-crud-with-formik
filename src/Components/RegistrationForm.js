@@ -11,14 +11,15 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from "react-redux";
 import { registerData, initialState as initialValues } from '../Redux/Slice/RegisterFormSlice';
-import { deleteUser, getRegisterData, registerUser } from '../Api/Api';
+import { deleteUser, getRegisterData, registerUser, updateUser } from '../Api/Api';
 
 
 export default function Foam() {
     let [formData, setFormData] = useState([]);            //show data on table
-    let [editingIndex, setEditingIndex] = useState(-1);    //for edit
     let [ButtonUpdate, setButtonUpdate] = useState("");    //for button text update
     let [editid, setEditId] = useState("");                //for update API
+    let [editingIndex, setEditingIndex] = useState(-1);    //for edit
+
 
     const dispatch = useDispatch()
 
@@ -60,55 +61,27 @@ export default function Foam() {
 
     const onSubmit = async (values, { resetForm }) => {
         try {
-            console.log("onsubmit", values);
-            dispatch(registerData(values));
-            setFormData([...formData, values]);
-            await registerUser(values);
-            toast.success("Register Successfully!");
+            if (editingIndex !== -1) {
+                const updatedValues = { ...values, id: editid };
+                await updateUser(editid, updatedValues);
+                toast.success("Updated Successfully");
+                // Fetch latest data from backend
+                const response = await getRegisterData();
+                setFormData(response.data);
+                setEditingIndex(-1);
+                setEditId("");
+                setButtonUpdate("");
+            } else {
+                console.log("onsubmit", values);
+                dispatch(registerData(values));
+                setFormData([...formData, values]);
+                await registerUser(values);
+                toast.success("Register Successfully!");
+            }
             resetForm();
         } catch (error) {
-            toast.error("Registration failed!");
+            toast.error(editingIndex !== -1 ? "Update failed!" : "Registration failed!");
         }
-
-        // navigate("/")
-        // const emailExists = formData.some(data => data.email === values.email);
-
-        // let mydata = {
-        //     firstName: values.firstName,
-        //     lastName: values.lastName,
-        //     gender: values.gender,
-        //     language: values.language,
-        //     email: values.email,
-        //     phoneNo: values.phoneNo,
-        //     city: values.city,
-        //     password: values.password,
-        //     description: values.description
-        // };
-        // if (editingIndex !== -1) {
-        //     // Patch API
-        //     axios.patch(`http://localhost:3000/users/${editid}`, mydata)
-        //         .then(response => {
-        //             // console.log("Data Update Successfully")
-        //         })
-
-        // }
-        // else if (!emailExists) {
-        //     // POST API
-        //     axios.post("http://localhost:3000/users", mydata)
-        //         .then(response => {
-        //             toast.success("Register Successfully!");
-        //             resetForm();
-        //         })
-
-        // } else {
-        //     toast.warning("Email already exists, enter a different email.");
-        // }
-        // setTimeout(() => {
-        //     axios.get("http://localhost:3000/users")
-        //         .then((response) => {
-        //             setFormData(response.data);
-        //         });
-        // }, 1000);
     };
 
     const handeldeletebtn = async (id) => {
@@ -144,8 +117,7 @@ export default function Foam() {
     return (
         <>
             <Formik
-                // initialValues={editingIndex === -1 ? initialValues : formData[editingIndex]}
-                initialValues={initialValues}
+                initialValues={editingIndex === -1 ? initialValues : formData[editingIndex]}
                 validationSchema={validationSchema}
                 onSubmit={onSubmit}
                 enableReinitialize

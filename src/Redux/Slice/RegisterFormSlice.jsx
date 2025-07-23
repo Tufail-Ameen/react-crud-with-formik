@@ -18,7 +18,9 @@ const RegisterFormSlice = createSlice({
     reducers: {
         registerData: (state, action) => {
             console.log("action.payload", action.payload);
+            return {...state, ...action.payload};
         },
+
     },
 });
 

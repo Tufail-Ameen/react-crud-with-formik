@@ -11,22 +11,21 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from "react-redux";
 import { registerData, initialState as initialValues } from '../Redux/Slice/RegisterFormSlice';
+import { deleteUser, getRegisterData, registerUser } from '../Api/Api';
 
 
 export default function Foam() {
-    let [formData, setFormData] = useState([]);            //for show data
+    let [formData, setFormData] = useState([]);            //show data on table
     let [editingIndex, setEditingIndex] = useState(-1);    //for edit
     let [ButtonUpdate, setButtonUpdate] = useState("");    //for button text update
     let [editid, setEditId] = useState("");                //for update API
 
     const dispatch = useDispatch()
 
-    // Get API
     useEffect(() => {
-        axios.get("http://localhost:3000/users")
-            .then((response) => {
-                setFormData(response.data);
-            });
+        getRegisterData()
+            .then((response) => setFormData(response.data))
+            .catch((error) => console.log(error));
     }, []);
 
     const validationSchema = Yup.object({
@@ -59,9 +58,17 @@ export default function Foam() {
             .required("password is required")
     });
 
-    const onSubmit = (values, { resetForm }) => {
-        console.log("onsubmit", values);
-        dispatch(registerData(values));
+    const onSubmit = async (values, { resetForm }) => {
+        try {
+            console.log("onsubmit", values);
+            dispatch(registerData(values));
+            setFormData([...formData, values]);
+            await registerUser(values);
+            toast.success("Register Successfully!");
+            resetForm();
+        } catch (error) {
+            toast.error("Registration failed!");
+        }
 
         // navigate("/")
         // const emailExists = formData.some(data => data.email === values.email);
@@ -104,30 +111,26 @@ export default function Foam() {
         // }, 1000);
     };
 
-    const handeldeletebtn = (id) => {
-        Swal.fire({
-            title: 'Do you want to delete?',
+    const handeldeletebtn = async (id) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes!',
-            cancelButtonText: 'No!',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
             reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // delete API
-                axios.delete(`http://localhost:3000/users/${id}`)
-                setTimeout(() => {
-                    axios.get("http://localhost:3000/users")
-                        .then((response) => {
-                            setFormData(response.data);
-                        });
-                }, 1000);
-
-                toast.success("Deleted Successfully");
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                toast.success("Cancel Successfully");
-            }
         });
+        if (result.isConfirmed) {
+            try {
+                await deleteUser(id);
+                toast.success("Deleted Successfully");
+            } catch (error) {
+                toast.error("Deletion failed!");
+            }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            toast.info("Deletion cancelled");
+        }
     };
 
     const handeleditbtn = (index, id) => {
